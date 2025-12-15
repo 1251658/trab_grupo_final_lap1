@@ -20,27 +20,52 @@ public class Utente {
     private static final String URGENTE = "Urgente"; // Vermelha
     private static final String SAIDA_CRITICA = "Crítico/Saída";
 
+    // 🆕 Construtor Padrão (Usado na Simulação)
     public Utente(String nome, String nivelUrgenciaInicial) {
         this.nome = nome;
         this.nivelUrgencia = nivelUrgenciaInicial;
         this.unidadesEmEspera = 0;
         this.emConsulta = false;
-        // Inicializa as variáveis de consulta (opcional, mas boa prática)
         this.duracaoConsulta = 0;
         this.tempoRestanteConsulta = 0;
     }
+
+    // 🆕 Construtor de PERSISTÊNCIA (Usado pelo GestorFicheiros)
+    /**
+     * Construtor utilizado para carregar o estado completo de um utente a partir do ficheiro.
+     */
+    public Utente(String nome, String nivelUrgencia, int unidadesEmEspera, boolean emConsulta, int tempoRestanteConsulta) {
+        this.nome = nome;
+        this.nivelUrgencia = nivelUrgencia;
+        this.unidadesEmEspera = unidadesEmEspera;
+        this.emConsulta = emConsulta;
+        this.tempoRestanteConsulta = tempoRestanteConsulta;
+        // Reconfigura a duração total da consulta (é necessária para reiniciar a simulação)
+        iniciarConsulta(); // Chama o método para configurar this.duracaoConsulta com base no nivelUrgencia
+        this.tempoRestanteConsulta = tempoRestanteConsulta; // Mas o restante volta a ser o lido
+    }
+
 
     // --- Getters ---
     public String getNome() { return nome; }
     public String getNivelUrgencia() { return nivelUrgencia; }
     public boolean estaEmConsulta() { return emConsulta; }
     public int getUnidadesEmEspera() { return unidadesEmEspera; }
-    public int getDuracaoConsulta() { return duracaoConsulta; } // Getter adicionado
+    public int getDuracaoConsulta() { return duracaoConsulta; }
 
     // setters
     public void setEmConsulta(boolean emConsulta) {
         this.emConsulta = emConsulta;
+    }
 
+    // 🆕 NOVO SETTER: Necessário para carregar o estado 'unidadesEmEspera' do CSV
+    public void setUnidadesEmEspera(int unidadesEmEspera) {
+        this.unidadesEmEspera = unidadesEmEspera;
+    }
+
+    // 🆕 NOVO SETTER: Necessário para carregar o estado 'tempoRestanteConsulta' do CSV
+    public void setTempoRestanteConsulta(int tempoRestanteConsulta) {
+        this.tempoRestanteConsulta = tempoRestanteConsulta;
     }
 
 
@@ -100,15 +125,15 @@ public class Utente {
         this.emConsulta = true;
         this.unidadesEmEspera = 0;
 
-        // Configura a duração com base no nível de urgência atual
+        // ATUALIZAÇÃO: Usar a classe Configuracao para tempos dinâmicos
         if (BAIXA.equals(nivelUrgencia)) {
-            this.duracaoConsulta = 1; // Baixa: 1 un.
+            this.duracaoConsulta = Configuracao.TEMPO_CONSULTA_BAIXA;
         } else if (MEDIA.equals(nivelUrgencia)) {
-            this.duracaoConsulta = 2; // Média: 2 un.
+            this.duracaoConsulta = Configuracao.TEMPO_CONSULTA_MEDIA;
         } else if (URGENTE.equals(nivelUrgencia)) {
-            this.duracaoConsulta = 3; // Urgente: 3 un.
+            this.duracaoConsulta = Configuracao.TEMPO_CONSULTA_URGENTE;
         } else {
-            this.duracaoConsulta = 1; // Default
+            this.duracaoConsulta = Configuracao.TEMPO_CONSULTA_BAIXA; // Default
         }
         this.tempoRestanteConsulta = this.duracaoConsulta;
     }
@@ -125,5 +150,19 @@ public class Utente {
             }
         }
         return false;
+    }
+
+    // 🆕 toCSV() (Não precisa de alteração)
+    /**
+     * Formata o estado atual do Utente para uma linha CSV.
+     * Campos: nome;nivelUrgencia;unidadesEmEspera;emConsulta;tempoRestanteConsulta
+     */
+    public String toCSV() {
+        String sep = Configuracao.SEPARADOR;
+        return nome + sep +
+                nivelUrgencia + sep +
+                unidadesEmEspera + sep +
+                emConsulta + sep +
+                tempoRestanteConsulta;
     }
 }

@@ -6,16 +6,21 @@ public class Medico {
     private int horaSaidaConfigurada;
     private boolean emServico;
 
+    // 🆕 NOVO CAMPO: Necessário para o cálculo de salários (Aluno 2)
+    private double valorHora;
+
     private int unidadesTrabalhadasSeguidas;
     private int unidadesEmDescanso;
 
     private static final int HORAS_PARA_DESCANSO = 5;
     private static final int UNIDADES_DE_DESCANSO_REQUERIDAS = 1;
 
-    public Medico(String nome, int entrada, int saida) {
+    // 🆕 CONSTRUTOR ATUALIZADO: Recebe agora o valorHora
+    public Medico(String nome, int entrada, int saida, double valorHora) {
         this.nome = nome;
         this.horaEntrada = entrada;
         this.horaSaidaConfigurada = saida;
+        this.valorHora = valorHora; // Inicializa o novo campo
         this.emServico = false;
         this.unidadesTrabalhadasSeguidas = 0;
         this.unidadesEmDescanso = 0;
@@ -26,6 +31,9 @@ public class Medico {
     public boolean estaEmServico() { return emServico; }
     public boolean estaEmDescanso() { return unidadesEmDescanso > 0; }
     public int getHoraSaidaConfigurada() { return horaSaidaConfigurada; }
+
+    // 🆕 NOVO GETTER: Necessário para o cálculo do Aluno 2
+    public double getValorHora() { return valorHora; }
 
     // setters
     public void setEmServico(boolean emServico) {
@@ -96,5 +104,20 @@ public class Medico {
 
     private boolean isHorarioTrabalho(int horaAtual) {
         return horaAtual >= horaEntrada && horaAtual <= horaSaidaConfigurada;
+    }
+
+    // 🆕 ATUALIZAÇÃO DO toCSV(): Inclui o valorHora (último campo)
+    /**
+     * Formata o estado atual do Medico para uma linha CSV.
+     * Campos: nome;horaEntrada;horaSaidaConfigurada;unidadesTrabalhadasSeguidas;unidadesEmDescanso;valorHora
+     */
+    public String toCSV() {
+        String sep = Configuracao.SEPARADOR;
+        return nome + sep +
+                horaEntrada + sep +
+                horaSaidaConfigurada + sep +
+                unidadesTrabalhadasSeguidas + sep +
+                unidadesEmDescanso + sep +
+                valorHora; // Novo campo para persistência
     }
 }

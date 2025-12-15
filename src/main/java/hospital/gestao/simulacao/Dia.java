@@ -37,20 +37,20 @@ public class Dia {
         System.out.println("⌚ AVANÇO DE TEMPO: Hora Atual = " + horaSimulacao + "/" + UNIDADES_POR_DIA);
         System.out.println("==============================================");
 
-        //processar o tempo dos médicos first.
+        // Processar o tempo dos médicos (descanso/horário)
         aplicarLogicaTempoMedicos();
 
-        //só depois libertar o médico.
-        aplicarLogicaConsultaESaida();
-
-        //verifica a disponibilidade e notifica (o descanso já deve estar ativo)
+        // 1. Verifica a disponibilidade (informa sobre médicos que saíram de descanso/entraram no turno)
         verificarDisponibilidadeMedicos();
 
-        //aplica a progressão de urgência
+        // 2. Aplica a progressão de urgência
         aplicarProgressaoUrgencia();
 
-        //tenta alocar utentes aos médicos disponíveis
+        // 3. Tenta alocar utentes aos médicos disponíveis
         alocarUtentesAosMedicos();
+
+        // 4. Só liberta o médico e utente DEPOIS de todos os outros processos.
+        aplicarLogicaConsultaESaida();
     }
 
     //metodos auxiliares
@@ -66,8 +66,8 @@ public class Dia {
                 boolean consultaTerminada = utente.aplicarLogicaConsulta();
 
                 if (consultaTerminada) {
-                    //libertar o Médico associado
-                    libertarMedico(utente);
+                    // Liberta o primeiro médico em serviço (limitação estrutural temporária)
+                    libertarPrimeiroMedicoEmServico();
 
                     //remover o utente da lista (saída do hospital)
                     iterator.remove();
@@ -77,8 +77,8 @@ public class Dia {
         }
     }
 
-    // liberar medico
-    private void libertarMedico(Utente utente) {
+    // liberar medico (libera o primeiro que encontrar em serviço)
+    private void libertarPrimeiroMedicoEmServico() {
         for (Medico medico : medicosAtivos) {
             if (medico.estaEmServico()) {
                 medico.setEmServico(false);
@@ -103,7 +103,7 @@ public class Dia {
             if (medico.isDisponivel(horaSimulacao)) {
                 System.out.println("✅ NOTIFICAÇÃO: Médico " + medico.getNome() + " está AGORA disponível.");
             } else if (medico.estaEmDescanso()) {
-                //notificação descanso
+                // notificação descanso
             } else if (medico.getHoraSaidaConfigurada() < horaSimulacao && medico.estaEmServico()) {
                 System.out.println("🔔 NOTIFICAÇÃO: Médico " + medico.getNome() + " está após o horário, mas AINDA em serviço.");
             }
@@ -137,12 +137,17 @@ public class Dia {
     private void alocarUtentesAosMedicos() {
         System.out.println("--- Tentativa de Alocação de Pacientes ---");
 
+        // 📢 DIAGNÓSTICO: Inicial
+        System.out.println(">>> INÍCIO DA ALOCAÇÃO: Utentes em fila = " + utentesEmEspera.size());
+
         //ordenar utentes por prioridade(Urgente > Média > Baixa)
         utentesEmEspera.sort((u1, u2) -> u2.getPrioridade() - u1.getPrioridade());
 
         for (Utente utente : utentesEmEspera) {
 
             if (utente.estaEmConsulta() || utente.getPrioridade() == 0) {
+                // 📢 DIAGNÓSTICO: Identifica porque o utente foi ignorado
+                System.out.println("DIAGNÓSTICO ALOCAÇÃO: Utente " + utente.getNome() + " ignorado (em consulta? " + utente.estaEmConsulta() + " | Prioridade: " + utente.getPrioridade() + ")");
                 continue;
             }
 
@@ -169,11 +174,23 @@ public class Dia {
                         " (" + utente.getNivelUrgencia() + ") alocado ao Dr. " + medicoAlocado.getNome() +
                         ". Duração prevista: " + utente.getDuracaoConsulta() + " un.");
 
+            } else {
+                System.out.println("DIAGNÓSTICO ALOCAÇÃO: Sem médicos disponíveis para " + utente.getNome());
             }
         }
     }
 
     public int getHoraAtual() {
         return horaAtual;
+    }
+
+    // Getter para a lista de utentes em espera.
+    public List<Utente> getUtentesEmEspera() {
+        return utentesEmEspera;
+    }
+
+    // Getter para a lista de médicos ativos (necessário para persistência em TesteSimulacao).
+    public List<Medico> getMedicosAtivos() {
+        return medicosAtivos;
     }
 }
