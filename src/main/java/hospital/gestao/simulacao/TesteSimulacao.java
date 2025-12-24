@@ -1,6 +1,6 @@
 package hospital.gestao.simulacao;
 
-import java.util.List;
+import hospital.gestao.estruturas.Lista;
 
 public class TesteSimulacao {
 
@@ -13,21 +13,27 @@ public class TesteSimulacao {
         Configuracao.carregarConfiguracoes();
 
         // 🆕 LINHA DE DIAGNÓSTICO
-        System.out.println("📢 DIAGNÓSTICO: Tempo Urgente carregado (Configuração): " + Configuracao.TEMPO_CONSULTA_URGENTE);
+        System.out.println(
+                "📢 DIAGNÓSTICO: Tempo Urgente carregado (Configuração): " + Configuracao.TEMPO_CONSULTA_URGENTE);
 
         // 2. Carregar dados (Aluno 1 - GestorFicheiros)
-        List<Utente> utentesIniciais = GestorFicheiros.carregarUtentes();
-        List<Medico> medicosIniciais = GestorFicheiros.carregarMedicos();
+        Lista<Utente> utentesIniciais = GestorFicheiros.carregarUtentes();
+        Lista<Medico> medicosIniciais = GestorFicheiros.carregarMedicos();
 
-        if (utentesIniciais.isEmpty() || medicosIniciais.isEmpty()) {
-            System.err.println("❌ ERRO CRÍTICO: Não foi possível carregar Utentes e/ou Médicos. A simulação não pode iniciar.");
+        System.out.println("DEBUG: Utentes loaded: " + utentesIniciais.tamanho());
+        System.out.println("DEBUG: Medicos loaded: " + medicosIniciais.tamanho());
+
+        if (utentesIniciais.vazia() || medicosIniciais.vazia()) {
+            System.err.println(
+                    "❌ ERRO CRÍTICO: Não foi possível carregar Utentes e/ou Médicos. A simulação não pode iniciar.");
             return;
         }
 
         // 3. Inicializar a simulação
         Dia simulador = new Dia(utentesIniciais, medicosIniciais);
 
-        System.out.println("✅ INICIALIZAÇÃO BEM-SUCEDIDA. Médicos: " + medicosIniciais.size() + ", Utentes em espera: " + utentesIniciais.size());
+        System.out.println("✅ INICIALIZAÇÃO BEM-SUCEDIDA. Médicos: " + medicosIniciais.tamanho()
+                + ", Utentes em espera: " + utentesIniciais.tamanho());
         System.out.println("==================================================");
 
         // --- LOOP PRINCIPAL DE SIMULAÇÃO ---
@@ -35,12 +41,14 @@ public class TesteSimulacao {
             simulador.avancarUnidadeTempo();
             try {
                 Thread.sleep(50);
-            } catch (InterruptedException ignored) {}
+            } catch (InterruptedException ignored) {
+            }
         }
 
         // 4. Salvar o estado final (Aluno 1)
         GestorFicheiros.salvarUtentes(simulador.getUtentesEmEspera());
-        GestorFicheiros.salvarMedicos(simulador.getMedicosAtivos()); // Adicionei o método getMedicosAtivos na classe Dia
+        GestorFicheiros.salvarMedicos(simulador.getMedicosAtivos()); // Adicionei o método getMedicosAtivos na classe
+                                                                     // Dia
 
         System.out.println("\n==================================================");
         System.out.println("            SIMULAÇÃO FINALIZADA                  ");
