@@ -2,6 +2,7 @@ package hospital.gestao.simulacao;
 
 public class Medico {
     private String nome;
+    private Especialidade especialidade; // 🆕 Campo de Especialidade
     private int horaEntrada;
     private int horaSaidaConfigurada;
     private boolean emServico;
@@ -12,28 +13,55 @@ public class Medico {
     private int unidadesTrabalhadasSeguidas;
     private int unidadesEmDescanso;
 
+    // 🆕 Estatística: Total acumulado no dia (não reseta com descanso)
+    private int totalUnidadesTrabalhadas;
+
     private static final int HORAS_PARA_DESCANSO = 5;
     private static final int UNIDADES_DE_DESCANSO_REQUERIDAS = 1;
 
-    // 🆕 CONSTRUTOR ATUALIZADO: Recebe agora o valorHora
-    public Medico(String nome, int entrada, int saida, double valorHora) {
+    // 🆕 CONSTRUTOR ATUALIZADO: Recebe agora a Especialidade e o valorHora
+    public Medico(String nome, Especialidade especialidade, int entrada, int saida, double valorHora) {
         this.nome = nome;
+        this.especialidade = especialidade; // Inicializa a especialidade
         this.horaEntrada = entrada;
         this.horaSaidaConfigurada = saida;
-        this.valorHora = valorHora; // Inicializa o novo campo
+        this.valorHora = valorHora;
         this.emServico = false;
         this.unidadesTrabalhadasSeguidas = 0;
         this.unidadesEmDescanso = 0;
+        this.totalUnidadesTrabalhadas = 0;
     }
 
     // getters
-    public String getNome() { return nome; }
-    public boolean estaEmServico() { return emServico; }
-    public boolean estaEmDescanso() { return unidadesEmDescanso > 0; }
-    public int getHoraSaidaConfigurada() { return horaSaidaConfigurada; }
+    public String getNome() {
+        return nome;
+    }
+
+    // 🆕 Getter para Especialidade
+    public Especialidade getEspecialidade() {
+        return especialidade;
+    }
+
+    public boolean estaEmServico() {
+        return emServico;
+    }
+
+    public boolean estaEmDescanso() {
+        return unidadesEmDescanso > 0;
+    }
+
+    public int getHoraSaidaConfigurada() {
+        return horaSaidaConfigurada;
+    }
 
     // 🆕 NOVO GETTER: Necessário para o cálculo do Aluno 2
-    public double getValorHora() { return valorHora; }
+    public double getValorHora() {
+        return valorHora;
+    }
+
+    public int getTotalUnidadesTrabalhadas() {
+        return totalUnidadesTrabalhadas;
+    }
 
     // setters
     public void setEmServico(boolean emServico) {
@@ -43,6 +71,23 @@ public class Medico {
         if (!emServico && unidadesTrabalhadasSeguidas >= HORAS_PARA_DESCANSO) {
             iniciarDescansoObrigatorio();
         }
+    }
+
+    // 🆕 Setters para restauração de estado (Persistência)
+    public void setUnidadesTrabalhadasSeguidas(int unidades) {
+        this.unidadesTrabalhadasSeguidas = unidades;
+    }
+
+    public void setUnidadesEmDescanso(int unidades) {
+        this.unidadesEmDescanso = unidades;
+    }
+
+    public void setTotalUnidadesTrabalhadas(int total) {
+        this.totalUnidadesTrabalhadas = total;
+    }
+
+    public void setEspecialidade(Especialidade especialidade) {
+        this.especialidade = especialidade;
     }
 
     // disponibilidade
@@ -70,7 +115,10 @@ public class Medico {
     private void iniciarDescansoObrigatorio() {
         if (unidadesEmDescanso == 0) {
             unidadesEmDescanso = UNIDADES_DE_DESCANSO_REQUERIDAS;
-            System.out.println("⚠️ ALERTA DESCANSO: Médico " + nome + " atingiu " + HORAS_PARA_DESCANSO + " horas e INICIOU " + UNIDADES_DE_DESCANSO_REQUERIDAS + " un. de descanso.");
+            System.out.println("⚠️ ALERTA DESCANSO: Médico " + nome + " ("
+                    + (especialidade != null ? especialidade.getNome() : "Sem Esp.") + ") atingiu "
+                    + HORAS_PARA_DESCANSO + " horas e INICIOU " + UNIDADES_DE_DESCANSO_REQUERIDAS
+                    + " un. de descanso.");
         }
     }
 
@@ -91,9 +139,10 @@ public class Medico {
                 return; // Impede contagem de horas trabalhadas se estiver descansando
             }
 
-            //contar horas trabalhadas
+            // contar horas trabalhadas
             if (emServico) {
                 unidadesTrabalhadasSeguidas++;
+                totalUnidadesTrabalhadas++; // 🆕 Incrementa o total
             }
         }
 
@@ -106,18 +155,21 @@ public class Medico {
         return horaAtual >= horaEntrada && horaAtual <= horaSaidaConfigurada;
     }
 
-    // 🆕 ATUALIZAÇÃO DO toCSV(): Inclui o valorHora (último campo)
+    // 🆕 ATUALIZAÇÃO DO toCSV(): Inclui o código da especialidade
     /**
      * Formata o estado atual do Medico para uma linha CSV.
-     * Campos: nome;horaEntrada;horaSaidaConfigurada;unidadesTrabalhadasSeguidas;unidadesEmDescanso;valorHora
+     * Campos:
+     * nome;codEspecialidade;horaEntrada;horaSaidaConfigurada;unidadesTrabalhadasSeguidas;unidadesEmDescanso;valorHora
      */
     public String toCSV() {
         String sep = Configuracao.SEPARADOR;
+        String codEsp = (especialidade != null) ? especialidade.getCodigo() : "N/A";
         return nome + sep +
+                codEsp + sep +
                 horaEntrada + sep +
                 horaSaidaConfigurada + sep +
                 unidadesTrabalhadasSeguidas + sep +
                 unidadesEmDescanso + sep +
-                valorHora; // Novo campo para persistência
+                totalUnidadesTrabalhadas;
     }
 }
